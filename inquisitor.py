@@ -21,7 +21,7 @@ def handler_new_member(message):
     save_data()
     quarantine = datetime.datetime.fromtimestamp(data["quarantine"][user_id]).strftime('%Y-%m-%d %H:%M:%S')
     msg = f'{make_fullname(message)} joined the chat {message.chat.title}. Quarantine until {quarantine}'
-    print(msg)
+    #print(msg)
     log_it(msg)
 
 
@@ -30,7 +30,7 @@ def handler_new_member(message):
         and message.chat.id == GROUP
         and data["quarantine"].get(str(message.from_user.id), 0) > time())
 def filer_new_members(message):
-    if data['moderation'] == True:
+    if data['moderation']:
         # horses emoji
         if any([chr(i) in message.text for i in (128014, 127943, 128052)]):
             reason = "horses emoji from new user"
@@ -49,10 +49,10 @@ def filer_new_members(message):
             
         else:
             msg = f'{date_and_time()} : {make_fullname(message)} wrote to {message.chat.id} chat: "{message.text}"' 
-            print(msg)
+            #print(msg)
         
     else:
-        msg = f"user {message.from_user.id} said {message.text} and wasn`t banned in {message.chat.title}."
+        msg = f"user {message.from_user.id} said {message.text} and was not banned in {message.chat.title}."
         log_it(msg)
 
 
@@ -91,9 +91,9 @@ def print_data(message):
         if message.text == '/print_data':
             bot.send_message(message.chat.id, f'{data}')
         elif message.text == '/print_status':
-            workin = (datetime.date.today() - datetime.date(2021, 2, 17)).days
+            working = (datetime.date.today() - datetime.date(2021, 2, 17)).days
             bans, tips = data["banned"], data["tips"]
-            msg = f"I'm working for you for {workin // 30} month and {workin % 30} days already.\n{bans} horses were banned, {tips} tips were given."
+            msg = f"I'm working for you for {working // 30} month and {working % 30} days already.\n{bans} horses were banned, {tips} tips were given."
             bot.send_message(message.chat.id, msg)
 
 
@@ -102,9 +102,11 @@ def save_data():
     with open(config.data_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
+
 def load_data():
     with open(config.data_file, 'r', encoding='utf-8') as f:
         return json.load(f)
+
 
 def log_it(msg):
     log = f"{date_and_time()} : {msg}\n"
@@ -140,7 +142,7 @@ def ban_user(message, reason):
 def all_text_messages(message):
     chat = lambda message: message.chat.title or 'private'
     msg = f'{date_and_time()} : {make_fullname(message)} wrote to {chat(message)} chat: "{message.text}"' 
-    print(msg)
+    #print(msg)
 
  # ---------------------------------------------------------------------------------------       
 
