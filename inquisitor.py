@@ -21,7 +21,6 @@ def handler_new_member(message):
     save_data()
     quarantine = datetime.datetime.fromtimestamp(data["quarantine"][user_id]).strftime('%Y-%m-%d %H:%M:%S')
     msg = f'{make_fullname(message)} joined the chat {message.chat.title}. Quarantine until {quarantine}'
-    #print(msg)
     log_it(msg)
 
 
