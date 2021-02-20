@@ -109,7 +109,7 @@ def load_data():
 
 def log_it(msg):
     log = f"{date_and_time()} : {msg}\n"
-    with open('log.log', 'a', encoding='utf-8') as f:
+    with open('/root/Inquisitor/log.log', 'a', encoding='utf-8') as f:
         f.write(log)
 
 
