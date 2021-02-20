@@ -13,7 +13,7 @@ SUPERUSER = config.superuser
 # ----------------------------- QUARANTINE -------------------------------------------------
 @bot.message_handler(content_types=["new_chat_members"])
 def handler_new_member(message):
-    bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time()+data["restrict_user"])
+    bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time()+data["restrict_user"], can_send_messages=True)
     user_id = str(message.from_user.id)
     date = int(message.date)
     data["quarantine"] = {key: value for key, value in data["quarantine"].items() if value > date}
