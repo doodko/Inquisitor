@@ -141,6 +141,13 @@ def ban_user(message, reason):
     data["banned"] += 1
     save_data()
 
+def check_username(message):
+    name = (message.from_user.first_name + (message.from_user.last_name or '')).lower()
+    if any(map(lambda match: re.search(match, re.sub(r'[\W]', '', name)), config.reglist)):
+        reason = 'Bad Name'
+        ban_user(message, reason)
+
+
 
 # --------------------------ALL OTHER MESSAGES -------------------------------------------
 @bot.message_handler(content_types=['text'])
