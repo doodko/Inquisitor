@@ -13,8 +13,9 @@ SUPERUSER = config.superuser
 # ----------------------------- QUARANTINE -------------------------------------------------
 @bot.message_handler(content_types=["new_chat_members"])
 def handler_new_member(message):
-    if check_username(message):
-        ban_user(message, 'Bad Username')
+    if data['moderation']:
+        if check_username(message):
+            ban_user(message, 'Bad Username')
 
     else:
         bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time() + data["restrict_user"],
@@ -97,7 +98,8 @@ def print_data(message):
         elif message.text == '/print_status':
             working = (datetime.date.today() - datetime.date(2021, 2, 17)).days
             bans, tips = data["banned"], data["tips"]
-            msg = f"I'm working for you for {working // 30} month and {working % 30} days already.\n{bans} horses were banned, {tips} tips were given."
+            msg = f"I'm working for you for {working // 30} month and {working % 30} days already.\n" \
+                  f"{bans} horses were banned, {tips} tips were given."
             bot.send_message(message.chat.id, msg)
 
 
@@ -140,15 +142,15 @@ def ban_user(message, reason):
     data["banned"] += 1
     save_data()
 
+
 def check_username(message):
     name = (message.from_user.first_name + (message.from_user.last_name or '')).lower()
-    if (any(map(lambda match: re.search(match, re.sub(r'[\W]', '', name)), config.reglist))) or\
-            (any([chr(i) in name for i in (128014, 127943, 128052)])) or\
+    if (any(map(lambda match: re.search(match, re.sub(r'[\W]', '', name)), config.reglist))) or \
+            (any([chr(i) in name for i in (128014, 127943, 128052)])) or \
             (len([ord(i) for i in name if 180 < ord(i) < 1040 or 1112 < ord(i)]) > 7):
         return True
     else:
         return False
-
 
 
 # --------------------------ALL OTHER MESSAGES -------------------------------------------
@@ -160,8 +162,6 @@ def all_text_messages(message):
 
 
 # ---------------------------------------------------------------------------------------
-
-
 if __name__ == '__main__':
     data = load_data()
     log_it('Bot started')
