@@ -13,10 +13,9 @@ SUPERUSER = config.superuser
 # ----------------------------- QUARANTINE -------------------------------------------------
 @bot.message_handler(content_types=["new_chat_members"])
 def handler_new_member(message):
-    name = (message.from_user.first_name + (message.from_user.last_name or '')).lower()
-    if any(map(lambda match: re.search(match, re.sub(r'[\W]', '', name)), config.reglist)):
-        reason = 'Bad Name'
-        ban_user(message, reason)
+    if check_username(message):
+        ban_user(message, 'Bad Username')
+
     else:
         bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time() + data["restrict_user"],
                                  can_send_messages=True)
@@ -143,9 +142,12 @@ def ban_user(message, reason):
 
 def check_username(message):
     name = (message.from_user.first_name + (message.from_user.last_name or '')).lower()
-    if any(map(lambda match: re.search(match, re.sub(r'[\W]', '', name)), config.reglist)):
-        reason = 'Bad Name'
-        ban_user(message, reason)
+    if (any(map(lambda match: re.search(match, re.sub(r'[\W]', '', name)), config.reglist))) or\
+            (any([chr(i) in name for i in (128014, 127943, 128052)])) or\
+            (len([ord(i) for i in name if 180 < ord(i) < 1040 or 1112 < ord(i)]) > 7):
+        return True
+    else:
+        return False
 
 
 
