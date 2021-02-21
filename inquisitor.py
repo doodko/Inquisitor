@@ -13,21 +13,27 @@ SUPERUSER = config.superuser
 # ----------------------------- QUARANTINE -------------------------------------------------
 @bot.message_handler(content_types=["new_chat_members"])
 def handler_new_member(message):
-    bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time()+data["restrict_user"], can_send_messages=True)
-    user_id = str(message.from_user.id)
-    date = int(message.date)
-    data["quarantine"] = {key: value for key, value in data["quarantine"].items() if value > date}
-    data["quarantine"][user_id] = date + data['quarantine_time']
-    save_data()
-    quarantine = datetime.datetime.fromtimestamp(data["quarantine"][user_id]).strftime('%Y-%m-%d %H:%M:%S')
-    msg = f'{make_fullname(message)} joined the chat {message.chat.title}. Quarantine until {quarantine}'
-    log_it(msg)
+    name = (message.from_user.first_name + (message.from_user.last_name or '')).lower()
+    if any(map(lambda match: re.search(match, re.sub(r'[\W]', '', name)), config.reglist)):
+        reason = 'Bad Name'
+        ban_user(message, reason)
+    else:
+        bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time() + data["restrict_user"],
+                                 can_send_messages=True)
+        user_id = str(message.from_user.id)
+        date = int(message.date)
+        data["quarantine"] = {key: value for key, value in data["quarantine"].items() if value > date}
+        data["quarantine"][user_id] = date + data['quarantine_time']
+        save_data()
+        quarantine = datetime.datetime.fromtimestamp(data["quarantine"][user_id]).strftime('%Y-%m-%d %H:%M:%S')
+        msg = f'{make_fullname(message)} joined the chat {message.chat.title}. Quarantine until {quarantine}'
+        log_it(msg)
 
 
 # ----------------------------- FILTER FOR NEW MEMBERS --------------------------------------------
 @bot.message_handler(func=lambda message: message.text
-        and message.chat.id == GROUP
-        and data["quarantine"].get(str(message.from_user.id), 0) > time())
+                                          and message.chat.id == GROUP
+                                          and data["quarantine"].get(str(message.from_user.id), 0) > time())
 def filer_new_members(message):
     if data['moderation']:
         # horses emoji
@@ -45,11 +51,11 @@ def filer_new_members(message):
         elif any(map(lambda match: re.search(match, re.sub(r'[\W]', '', message.text.lower())), config.reglist)):
             reason = "horses regex from new user"
             ban_user(message, reason)
-            
+
         else:
-            msg = f'{date_and_time()} : {make_fullname(message)} wrote to {message.chat.id} chat: "{message.text}"' 
-            #print(msg)
-        
+            msg = f'{date_and_time()} : {make_fullname(message)} wrote to {message.chat.id} chat: "{message.text}"'
+            # print(msg)
+
     else:
         msg = f"user {message.from_user.id} said {message.text} and was not banned in {message.chat.title}."
         log_it(msg)
@@ -114,7 +120,7 @@ def log_it(msg):
 
 
 def make_fullname(message):
-    name = f"{message.from_user.id} {message.from_user.first_name}" 
+    name = f"{message.from_user.id} {message.from_user.first_name}"
     if hasattr(message.from_user, 'last_name') and message.from_user.last_name is not None:
         name += f" {message.from_user.last_name}"
     if hasattr(message.from_user, 'username') and message.from_user.username is not None:
@@ -134,16 +140,17 @@ def ban_user(message, reason):
     log_it(msg)
     data["banned"] += 1
     save_data()
-    
-    
+
+
 # --------------------------ALL OTHER MESSAGES -------------------------------------------
 @bot.message_handler(content_types=['text'])
 def all_text_messages(message):
     chat = lambda message: message.chat.title or 'private'
-    msg = f'{date_and_time()} : {make_fullname(message)} wrote to {chat(message)} chat: "{message.text}"' 
-    #print(msg)
+    msg = f'{date_and_time()} : {make_fullname(message)} wrote to {chat(message)} chat: "{message.text}"'
+    # print(msg)
 
- # ---------------------------------------------------------------------------------------       
+
+# ---------------------------------------------------------------------------------------
 
 
 if __name__ == '__main__':
