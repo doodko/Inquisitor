@@ -16,6 +16,7 @@ def handler_new_member(message):
     if data['moderation']:
         if check_username(message):
             ban_user(message, 'Bad Username')
+
         else:
             bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time() + data["restrict_user"],
                                      can_send_messages=True)
