@@ -103,6 +103,15 @@ def print_data(message):
             bot.send_message(message.chat.id, msg)
 
 
+@bot.message_handler(commands=['ask_volodya'])
+def ask_volodya(message):
+    msg = "Спробуйте запитати у Володі\:\n1\. Відкриваємо чат з ботом @pkvartal\_bot\n2\." \
+          "Пишемо йому запит *одним словом*\.\n3\. Отримуємо релевантні результати\."
+    bot.delete_message(message.chat.id, message.message_id)
+    bot.send_message(message.chat.id, msg, reply_to_message_id=message.reply_to_message.message_id,
+                     parse_mode='MarkdownV2')
+
+
 # ----------------------- FUNCTIONS -------------------------
 def save_data():
     with open(config.data_file, 'w', encoding='utf-8') as f:
