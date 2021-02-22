@@ -16,18 +16,17 @@ def handler_new_member(message):
     if data['moderation']:
         if check_username(message):
             ban_user(message, 'Bad Username')
-
-    else:
-        bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time() + data["restrict_user"],
-                                 can_send_messages=True)
-        user_id = str(message.from_user.id)
-        date = int(message.date)
-        data["quarantine"] = {key: value for key, value in data["quarantine"].items() if value > date}
-        data["quarantine"][user_id] = date + data['quarantine_time']
-        save_data()
-        quarantine = datetime.datetime.fromtimestamp(data["quarantine"][user_id]).strftime('%Y-%m-%d %H:%M:%S')
-        msg = f'{make_fullname(message)} joined the chat {message.chat.title}. Quarantine until {quarantine}'
-        log_it(msg)
+        else:
+            bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time() + data["restrict_user"],
+                                     can_send_messages=True)
+            user_id = str(message.from_user.id)
+            date = int(message.date)
+            data["quarantine"] = {key: value for key, value in data["quarantine"].items() if value > date}
+            data["quarantine"][user_id] = date + data['quarantine_time']
+            save_data()
+            quarantine = datetime.datetime.fromtimestamp(data["quarantine"][user_id]).strftime('%Y-%m-%d %H:%M:%S')
+            msg = f'{make_fullname(message)} joined the chat {message.chat.title}. Quarantine until {quarantine}'
+            log_it(msg)
 
 
 # ----------------------------- FILTER FOR NEW MEMBERS --------------------------------------------
