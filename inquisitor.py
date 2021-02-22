@@ -96,7 +96,7 @@ def print_data(message):
         if message.text == '/print_data':
             bot.send_message(message.chat.id, f'{data}')
         elif message.text == '/print_status':
-            working = (datetime.date.today() - datetime.date(2021, 2, 17)).days
+            working = (datetime.date.today() - datetime.date(2021, 2, 20)).days
             bans, tips = data["banned"], data["tips"]
             msg = f"I'm working for you for {working // 30} month and {working % 30} days already.\n" \
                   f"{bans} horses were banned, {tips} tips were given."
@@ -105,11 +105,19 @@ def print_data(message):
 
 @bot.message_handler(commands=['ask_volodya'])
 def ask_volodya(message):
-    msg = "Спробуйте запитати у Володі\:\n1\. Відкриваємо чат з ботом @pkvartal\_bot\n2\." \
-          "Пишемо йому запит *одним словом*\.\n3\. Отримуємо релевантні результати\."
-    bot.delete_message(message.chat.id, message.message_id)
-    bot.send_message(message.chat.id, msg, reply_to_message_id=message.reply_to_message.message_id,
-                     parse_mode='MarkdownV2')
+    if message.reply_to_message:
+        if message.text[13:]:
+            req = message.text[13:]
+        else:
+            req = 'одним словом'
+        msg = f"Спробуйте запитати у Володі\:\n1\. Відкриваємо чат з ботом @pkvartal\_bot\n" \
+              f"2\. Пишемо йому запит *{req}*\n3\. Отримуємо релевантні результати\. Профіт\!"
+        bot.delete_message(message.chat.id, message.message_id)
+        bot.send_message(message.chat.id, msg, reply_to_message_id=message.reply_to_message.message_id,
+                         parse_mode='MarkdownV2')
+    else:
+        bot.delete_message(message.chat.id, message.message_id)
+    data["tips"] += 1
 
 
 # ----------------------- FUNCTIONS -------------------------
@@ -125,7 +133,7 @@ def load_data():
 
 def log_it(msg):
     log = f"{date_and_time()} : {msg}\n"
-    with open('/root/Inquisitor/log.log', 'a', encoding='utf-8') as f:
+    with open(config.log_file, 'a', encoding='utf-8') as f:
         f.write(log)
 
 
@@ -173,6 +181,5 @@ def all_text_messages(message):
 # ---------------------------------------------------------------------------------------
 if __name__ == '__main__':
     data = load_data()
-    log_it('Bot started')
     bot.send_message(SUPERUSER, 'Bot started')
     bot.infinity_polling()
