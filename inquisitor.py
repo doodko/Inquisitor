@@ -120,6 +120,21 @@ def ask_volodya(message):
     data["tips"] += 1
 
 
+@bot.message_handler(commands=['read_rules'])
+def read_rules(message):
+    if message.from_user.username in config.admins:
+        if message.reply_to_message:
+            user = message.reply_to_message.from_user
+            bot.delete_message(message.chat.id, message.message_id)
+            bot.delete_message(message.chat.id, message.reply_to_message.id)
+            msg = f'[{user.first_name}](tg://user?id={user.id}), ознайомтесь з ' \
+                  f'[правилами группи](https://telegra.ph/Pravila-grupi-Petr%D1%96vskij-kvartal-12-19), будь ласка\.'
+            bot.send_message(message.chat.id, msg, message.reply_to_message.message_id, parse_mode='MarkdownV2')
+        else:
+            bot.delete_message(message.chat.id, message.message_id)
+        data["tips"] += 1
+
+
 # ----------------------- FUNCTIONS -------------------------
 def save_data():
     with open(config.data_file, 'w', encoding='utf-8') as f:
