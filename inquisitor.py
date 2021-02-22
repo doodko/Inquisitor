@@ -32,32 +32,23 @@ def handler_new_member(message):
 
 # ----------------------------- FILTER FOR NEW MEMBERS --------------------------------------------
 @bot.message_handler(func=lambda message: message.text
-                                          and message.chat.id == GROUP
-                                          and data["quarantine"].get(str(message.from_user.id), 0) > time())
+                        and message.chat.id == GROUP
+                        and data["quarantine"].get(str(message.from_user.id), 0) > time())
 def filer_new_members(message):
     if data['moderation']:
-        # horses emoji
         if any([chr(i) in message.text for i in (128014, 127943, 128052)]):
             reason = "horses emoji from new user"
-            ban_user(message, reason)
-
-        # symbols in message
         elif len([ord(i) for i in message.text if 180 < ord(i) < 1040 or 1112 < ord(i)]) > 7:
             count = len([ord(i) for i in message.text if 180 < ord(i) < 1040 or 1112 < ord(i)])
             reason = f"too many symbols ({count}) from new user"
-            ban_user(message, reason)
-
-        # horses in message
         elif any(map(lambda match: re.search(match, re.sub(r'[\W]', '', message.text.lower())), config.reglist)):
             reason = "horses regex from new user"
-            ban_user(message, reason)
 
-        else:
-            msg = f'{date_and_time()} : {make_fullname(message)} wrote to {message.chat.id} chat: "{message.text}"'
-            # print(msg)
+        ban_user(message, reason)
 
     else:
-        msg = f"user {message.from_user.id} said {message.text} and was not banned in {message.chat.title}."
+        msg = f'{date_and_time()} : {make_fullname(message)} wrote to {message.chat.id} chat: ' \
+              f'"{message.text}" and wasn\'t banned because of turned off moderation'
         log_it(msg)
 
 
@@ -106,8 +97,9 @@ def print_data(message):
 @bot.message_handler(commands=['ask_volodya'])
 def ask_volodya(message):
     if message.reply_to_message:
-        if message.text[13:]:
-            req = message.text[13:]
+        command = message.text.replace('@pk_moderatorbot', '')
+        if len(command.strip()) >= 15:
+            req = command[13:]
         else:
             req = 'одним словом'
         msg = f"Спробуйте запитати у Володі\:\n1\. Відкриваємо чат з ботом @pkvartal\_bot\n" \
@@ -115,9 +107,11 @@ def ask_volodya(message):
         bot.delete_message(message.chat.id, message.message_id)
         bot.send_message(message.chat.id, msg, reply_to_message_id=message.reply_to_message.message_id,
                          parse_mode='MarkdownV2')
+        log_message = f"{make_fullname(message)} used the command ask_volodya"
+        log_it(log_message)
+        data["tips"] += 1
     else:
         bot.delete_message(message.chat.id, message.message_id)
-    data["tips"] += 1
 
 
 @bot.message_handler(commands=['read_rules'])
@@ -130,9 +124,16 @@ def read_rules(message):
             msg = f'[{user.first_name}](tg://user?id={user.id}), ознайомтесь з ' \
                   f'[правилами группи](https://telegra.ph/Pravila-grupi-Petr%D1%96vskij-kvartal-12-19), будь ласка\.'
             bot.send_message(message.chat.id, msg, message.reply_to_message.message_id, parse_mode='MarkdownV2')
+            log_message = f"{make_fullname(message)} used the command read_rules"
+            log_it(log_message)
+            data["tips"] += 1
         else:
             bot.delete_message(message.chat.id, message.message_id)
-        data["tips"] += 1
+    else:
+        msg = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id}), радий що Ви спитали про " \
+              f"правила\. [Осьо вони](https://telegra.ph/Pravila-grupi-Petr%D1%96vskij-kvartal-12-19), тепер я " \
+              f"слідкую щоб Ви не порушували\."
+        bot.send_message(message.chat.id, msg, reply_to_message_id=message.message_id, parse_mode='MarkdownV2')
 
 
 # ----------------------- FUNCTIONS -------------------------
