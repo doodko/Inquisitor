@@ -36,22 +36,14 @@ def handler_new_member(message):
                         and data["quarantine"].get(str(message.from_user.id), 0) > time())
 def filer_new_members(message):
     if data['moderation']:
-        if any([chr(i) in message.text for i in (128014, 127943, 128052)]):
-            reason = "horses emoji from new user"
-            ban_user(message, reason)
-        elif len([ord(i) for i in message.text if 180 < ord(i) < 1040 or 1112 < ord(i)]) > 7:
-            count = len([ord(i) for i in message.text if 180 < ord(i) < 1040 or 1112 < ord(i)])
-            reason = f"too many symbols ({count}) from new user"
-            ban_user(message, reason)
-        elif any(map(lambda match: re.search(match, re.sub(r'[\W]', '', message.text.lower())), config.reglist)):
-            reason = "horses regex from new user"
-            ban_user(message, reason)
-        elif message.entities:
+        check_horses(message)
+        if message.entities:
             bot.delete_message(message.chat.id, message.message_id)
-            text = f'{mention_user(message)}, не встигли зайти в чат і одразу порушувати\? ' \
-                   f'Ознайомтесь з [правилами]({config.rules_url})\.'
+            text = f'{mention_user(message)}, не встигли зайти в чат і одразу посилання вставляти\? ' \
+                   f'У нас так не прийнято, спочатку ознайомтесь з [правилами]({config.rules_url})\.'
             bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
             data['tips'] += 1
+        all_text_messages(message)
 
     else:
         msg = f'{make_fullname(message)} wrote to {message.chat.id} chat: ' \
@@ -169,6 +161,19 @@ def make_fullname(message):
 
 def date_and_time():
     return datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def check_horses(message):
+    if any([chr(i) in message.text for i in (128014, 127943, 128052)]):
+        reason = "horses emoji from new user"
+        ban_user(message, reason)
+    elif len([ord(i) for i in message.text if 180 < ord(i) < 1040 or 1112 < ord(i)]) > 7:
+        count = len([ord(i) for i in message.text if 180 < ord(i) < 1040 or 1112 < ord(i)])
+        reason = f"too many symbols ({count}) from new user"
+        ban_user(message, reason)
+    elif any(map(lambda match: re.search(match, re.sub(r'[\W]', '', message.text.lower())), config.reglist)):
+        reason = "horses regex from new user"
+        ban_user(message, reason)
 
 
 def ban_user(message, reason):
