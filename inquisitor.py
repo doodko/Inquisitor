@@ -38,13 +38,19 @@ def filer_new_members(message):
     if data['moderation']:
         if any([chr(i) in message.text for i in (128014, 127943, 128052)]):
             reason = "horses emoji from new user"
+            ban_user(message, reason)
         elif len([ord(i) for i in message.text if 180 < ord(i) < 1040 or 1112 < ord(i)]) > 7:
             count = len([ord(i) for i in message.text if 180 < ord(i) < 1040 or 1112 < ord(i)])
             reason = f"too many symbols ({count}) from new user"
+            ban_user(message, reason)
         elif any(map(lambda match: re.search(match, re.sub(r'[\W]', '', message.text.lower())), config.reglist)):
             reason = "horses regex from new user"
-
-        ban_user(message, reason)
+            ban_user(message, reason)
+        elif message.entities:
+            bot.delete_message(message.chat.id, message.message_id)
+            text = f'{mention_user(message)}, не встигли зайти в чат і одразу порушувати\? ' \
+                   f'Ознайомтесь з [правилами]({config.rules_url})\.'
+            bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
 
     else:
         msg = f'{date_and_time()} : {make_fullname(message)} wrote to {message.chat.id} chat: ' \
@@ -122,7 +128,7 @@ def read_rules(message):
             bot.delete_message(message.chat.id, message.message_id)
             bot.delete_message(message.chat.id, message.reply_to_message.id)
             msg = f'[{user.first_name}](tg://user?id={user.id}), ознайомтесь з ' \
-                  f'[правилами группи](https://telegra.ph/Pravila-grupi-Petr%D1%96vskij-kvartal-12-19), будь ласка\.'
+                  f'[правилами группи]({config.rules_url}), будь ласка\.'
             bot.send_message(message.chat.id, msg, message.reply_to_message.message_id, parse_mode='MarkdownV2')
             log_message = f"{make_fullname(message)} used the command read_rules"
             log_it(log_message)
@@ -131,7 +137,7 @@ def read_rules(message):
             bot.delete_message(message.chat.id, message.message_id)
     else:
         msg = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id}), радий що Ви спитали про " \
-              f"правила\. [Осьо вони](https://telegra.ph/Pravila-grupi-Petr%D1%96vskij-kvartal-12-19), тепер я " \
+              f"правила\. [Осьо вони]({config.rules_url}), тепер я " \
               f"слідкую щоб Ви не порушували\."
         bot.send_message(message.chat.id, msg, reply_to_message_id=message.message_id, parse_mode='MarkdownV2')
 
@@ -186,12 +192,26 @@ def check_username(message):
         return False
 
 
+def mention_user(message):
+    if message.from_user.username:
+        mention = '@' + message.from_user.username
+    else:
+        mention = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+
+    return mention
+
+
 # --------------------------ALL OTHER MESSAGES -------------------------------------------
 @bot.message_handler(content_types=['text'])
 def all_text_messages(message):
-    chat = lambda message: message.chat.title or 'private'
-    msg = f'{date_and_time()} : {make_fullname(message)} wrote to {chat(message)} chat: "{message.text}"'
-    # print(msg)
+    if any(_ in message.text for _ in config.groups) \
+            and message.entities and message.from_user.username not in config.admins:
+        msg = f"{mention_user(message)}, не публікуйте лінки на групи ПК в загальному чаті, будь ласка \- надсилайте " \
+              f"їх в особисті повідомлення\. Дякую\!"
+        bot.delete_message(message.chat.id, message.message_id)
+        bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2')
+        log_msg = f'Bot has deleted a message from {make_fullname(message)} with a link to groups: {message.text}'
+        log_it(log_msg)
 
 
 # ---------------------------------------------------------------------------------------
