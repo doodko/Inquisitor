@@ -51,9 +51,10 @@ def filer_new_members(message):
             text = f'{mention_user(message)}, не встигли зайти в чат і одразу порушувати\? ' \
                    f'Ознайомтесь з [правилами]({config.rules_url})\.'
             bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
+            data['tips'] += 1
 
     else:
-        msg = f'{date_and_time()} : {make_fullname(message)} wrote to {message.chat.id} chat: ' \
+        msg = f'{make_fullname(message)} wrote to {message.chat.id} chat: ' \
               f'"{message.text}" and wasn\'t banned because of turned off moderation'
         log_it(msg)
 
@@ -127,8 +128,7 @@ def read_rules(message):
             user = message.reply_to_message.from_user
             bot.delete_message(message.chat.id, message.message_id)
             bot.delete_message(message.chat.id, message.reply_to_message.id)
-            msg = f'[{user.first_name}](tg://user?id={user.id}), ознайомтесь з ' \
-                  f'[правилами группи]({config.rules_url}), будь ласка\.'
+            msg = f'{mention_user(message)}, ознайомтесь з [правилами группи]({config.rules_url}), будь ласка\.'
             bot.send_message(message.chat.id, msg, message.reply_to_message.message_id, parse_mode='MarkdownV2')
             log_message = f"{make_fullname(message)} used the command read_rules"
             log_it(log_message)
@@ -136,9 +136,8 @@ def read_rules(message):
         else:
             bot.delete_message(message.chat.id, message.message_id)
     else:
-        msg = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id}), радий що Ви спитали про " \
-              f"правила\. [Осьо вони]({config.rules_url}), тепер я " \
-              f"слідкую щоб Ви не порушували\."
+        msg = f"{mention_user(message)}, радий що Ви спитали про правила\. [Осьо вони]({config.rules_url}), " \
+              f"тепер я слідкую щоб Ви не порушували\."
         bot.send_message(message.chat.id, msg, reply_to_message_id=message.message_id, parse_mode='MarkdownV2')
 
 
@@ -212,6 +211,14 @@ def all_text_messages(message):
         bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2')
         log_msg = f'Bot has deleted a message from {make_fullname(message)} with a link to groups: {message.text}'
         log_it(log_msg)
+        data['tips'] += 1
+    elif re.search(config.regs['sale_rent'], message.text.lower()) and message.from_user.username not in config.admins:
+        bot.delete_message(message.chat.id, message.message_id)
+        msg = f'{mention_user(message)}, пропозиції нерухомості не в цьому чаті\.'
+        bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2')
+        log_msg = f'Bot has deleted a message from {make_fullname(message)} with sale-rent proposition: {message.text}'
+        log_it(log_msg)
+        data['tips'] += 1
 
 
 # ---------------------------------------------------------------------------------------
