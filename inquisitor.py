@@ -121,7 +121,8 @@ def read_rules(message):
             user = message.reply_to_message.from_user
             bot.delete_message(message.chat.id, message.message_id)
             bot.delete_message(message.chat.id, message.reply_to_message.id)
-            msg = f'{mention_user(message)}, ознайомтесь з [правилами группи]({config.rules_url}), будь ласка\.'
+            msg = f'[{user.first_name}](tg://user?id={user.id}), ознайомтесь з ' \
+                  f'[правилами группи]({config.rules_url}), будь ласка\.'
             bot.send_message(message.chat.id, msg, message.reply_to_message.message_id, parse_mode='MarkdownV2')
             log_message = f"{make_fullname(message)} used the command read_rules"
             log_it(log_message)
@@ -132,6 +133,22 @@ def read_rules(message):
         msg = f"{mention_user(message)}, радий що Ви спитали про правила\. [Осьо вони]({config.rules_url}), " \
               f"тепер я слідкую щоб Ви не порушували\."
         bot.send_message(message.chat.id, msg, reply_to_message_id=message.message_id, parse_mode='MarkdownV2')
+
+
+@bot.message_handler(commands=['use_search'])
+def use_search(message):
+    if message.reply_to_message and message.from_user.username in config.admins:
+        bot.delete_message(message.chat.id, message.message_id)
+        user = message.reply_to_message.from_user
+        msg = f'[{user.first_name}](tg://user?id={user.id}), в телеграм дуже зручно реалізований пошук по чату, ' \
+              f'спробуйте скористатись ним\. Зверху натискаємо три крапочки \=\> пошук\.'
+        bot.send_message(message.chat.id, msg, reply_to_message_id=message.reply_to_message.message_id,
+                         parse_mode='MarkdownV2')
+        log_msg = f"{make_fullname(message)} used the command use_search"
+        log_it(log_msg)
+        data["tips"] += 1
+    else:
+        bot.delete_message(message.chat.id, message.message_id)
 
 
 # ----------------------- FUNCTIONS -------------------------
@@ -225,11 +242,21 @@ def all_text_messages(message):
         log_msg = f'Bot has deleted a message from {make_fullname(message)} with sale-rent proposition: {message.text}'
         log_it(log_msg)
         data['tips'] += 1
-    elif any(_ in message.text for _ in config.links):
+    elif any(_ in message.text for _ in config.links) and message.from_user.username not in config.admins:
         bot.delete_message(message.chat.id, message.message_id)
         msg = f'{mention_user(message)}, це посилання публікували вище вже три рази\. Думаю, достатньо\.'
         bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2')
         log_msg = f'Bot has deleted a message from {make_fullname(message)} with petition: {message.text}'
+        log_it(log_msg)
+        data['tips'] += 1
+    elif re.search(config.regs['advice_master'], message.text.lower()) \
+            and message.from_user.username not in config.admins:
+        msg = f'{mention_user(message)}, на щастя, ви не перші стикнулись з такою необхідністю \- це питання ' \
+              f'вже багаторазово обговорювалось вище і радили різних майстрів\. Ви дивились попередні ' \
+              f'рекомендації і всі вони не підійшли\? Якщо досі ні \- раджу скористатись пошуком, він ' \
+              f'тут дуже зручно реалізован \:\)'
+        bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2', reply_to_message_id=message.message_id)
+        log_msg = f'Bot has advised to use the search to {make_fullname(message)} with message: {message.text}'
         log_it(log_msg)
         data['tips'] += 1
 
