@@ -43,7 +43,8 @@ def filer_new_members(message):
                    f'У нас так не прийнято, спочатку ознайомтесь з [правилами]({config.rules_url})\.'
             bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
             data['tips'] += 1
-        all_text_messages(message)
+        else:
+            all_text_messages(message)
 
     else:
         msg = f'{make_fullname(message)} wrote to {message.chat.id} chat: ' \
@@ -222,6 +223,13 @@ def all_text_messages(message):
         msg = f'{mention_user(message)}, пропозиції нерухомості не в цьому чаті\.'
         bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2')
         log_msg = f'Bot has deleted a message from {make_fullname(message)} with sale-rent proposition: {message.text}'
+        log_it(log_msg)
+        data['tips'] += 1
+    elif any(_ in message.text for _ in config.links):
+        bot.delete_message(message.chat.id, message.message_id)
+        msg = f'{mention_user(message)}, це посилання публікували вище вже три рази\. Думаю, достатньо\.'
+        bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2')
+        log_msg = f'Bot has deleted a message from {make_fullname(message)} with petition: {message.text}'
         log_it(log_msg)
         data['tips'] += 1
 
