@@ -32,8 +32,8 @@ def handler_new_member(message):
 
 # ----------------------------- FILTER FOR NEW MEMBERS --------------------------------------------
 @bot.message_handler(func=lambda message: message.text
-                        and message.chat.id == GROUP
-                        and data["quarantine"].get(str(message.from_user.id), 0) > time())
+                     and message.chat.id == GROUP
+                     and data["quarantine"].get(str(message.from_user.id), 0) > time())
 def filer_new_members(message):
     if data['moderation']:
         check_horses(message)
@@ -50,6 +50,13 @@ def filer_new_members(message):
         msg = f'{make_fullname(message)} wrote to {message.chat.id} chat: ' \
               f'"{message.text}" and wasn\'t banned because of turned off moderation'
         log_it(msg)
+
+
+@bot.edited_message_handler(func=lambda message: message.text
+                            and message.chat.id == GROUP
+                            and data["quarantine"].get(str(message.from_user.id), 0) > time())
+def edit_message(message):
+    filer_new_members(message)
 
 
 # ------------------------------- COMMANDS ------------------------------------------------
