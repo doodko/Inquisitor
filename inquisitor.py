@@ -226,7 +226,6 @@ def mention_user(message):
         mention = '@' + message.from_user.username
     else:
         mention = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
-
     return mention
 
 
@@ -242,28 +241,11 @@ def all_text_messages(message):
         log_msg = f'Bot has deleted a message from {make_fullname(message)} with a link to groups: {message.text}'
         log_it(log_msg)
         data['tips'] += 1
-    elif re.search(config.regs['sale_rent'], message.text.lower()) and message.from_user.username not in config.admins:
-        bot.delete_message(message.chat.id, message.message_id)
-        msg = f'{mention_user(message)}, пропозиції нерухомості не в цьому чаті\.'
-        bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2')
-        log_msg = f'Bot has deleted a message from {make_fullname(message)} with sale-rent proposition: {message.text}'
-        log_it(log_msg)
-        data['tips'] += 1
     elif any(_ in message.text for _ in config.links) and message.from_user.username not in config.admins:
         bot.delete_message(message.chat.id, message.message_id)
         msg = f'{mention_user(message)}, це посилання публікували вище вже три рази\. Думаю, достатньо\.'
         bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2')
         log_msg = f'Bot has deleted a message from {make_fullname(message)} with petition: {message.text}'
-        log_it(log_msg)
-        data['tips'] += 1
-    elif re.search(config.regs['advice_master'], message.text.lower()) \
-            and message.from_user.username not in config.admins:
-        msg = f'{mention_user(message)}, на щастя, ви не перші стикнулись з такою необхідністю \- це питання ' \
-              f'вже багаторазово обговорювалось вище і радили різних майстрів\. Ви дивились попередні ' \
-              f'рекомендації і всі вони не підійшли\? Якщо досі ні \- раджу скористатись пошуком, він ' \
-              f'тут дуже зручно реалізован \:\)'
-        bot.send_message(message.chat.id, msg, parse_mode='MarkdownV2', reply_to_message_id=message.message_id)
-        log_msg = f'Bot has advised to use the search to {make_fullname(message)} with message: {message.text}'
         log_it(log_msg)
         data['tips'] += 1
 
