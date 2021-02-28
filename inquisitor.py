@@ -37,7 +37,7 @@ def handler_new_member(message):
 def filer_new_members(message):
     if data['moderation']:
         check_horses(message)
-        if message.entities:
+        if message.entities and (message.entities[0].type == 'url' or message.entities[0].type == 'mention'):
             bot.delete_message(message.chat.id, message.message_id)
             text = f'{mention_user(message)}, не встигли зайти в чат і одразу посилання вставляти\? ' \
                    f'У нас так не прийнято, спочатку ознайомтесь з [правилами]({config.rules_url})\.'
