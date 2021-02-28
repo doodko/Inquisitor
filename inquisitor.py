@@ -25,9 +25,6 @@ def handler_new_member(message):
             data["quarantine"] = {key: value for key, value in data["quarantine"].items() if value > date}
             data["quarantine"][user_id] = date + data['quarantine_time']
             save_data()
-            quarantine = datetime.datetime.fromtimestamp(data["quarantine"][user_id]).strftime('%Y-%m-%d %H:%M:%S')
-            msg = f'{make_fullname(message)} joined the chat {message.chat.title}. Quarantine until {quarantine}'
-            log_it(msg)
 
 
 # ----------------------------- FILTER FOR NEW MEMBERS --------------------------------------------
@@ -241,6 +238,14 @@ def all_text_messages(message):
         log_msg = f'Bot has deleted a message from {make_fullname(message)} with a link to groups: {message.text}'
         log_it(log_msg)
         data['tips'] += 1
+
+    elif any(map(lambda pattern: re.search(pattern, message.text.lower()), config.faq)):
+        msg_list = [config.faq[pat] for pat in config.faq if re.search(pat, message.text.lower())]
+        bot.reply_to(message, msg_list[0])
+        log_msg = f'Bot answered on message from {make_fullname(message)}: {message.text}'
+        log_it(log_msg)
+        data['tips'] += 1
+
     elif any(_ in message.text for _ in config.links) and message.from_user.username not in config.admins:
         bot.delete_message(message.chat.id, message.message_id)
         msg = f'{mention_user(message)}, це посилання публікували вище вже три рази\. Думаю, достатньо\.'
