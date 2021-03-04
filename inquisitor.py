@@ -5,6 +5,7 @@ from time import time
 import json
 import re
 
+# ----------------------------- ver 1.0 ----------------------------------------------------
 bot = telebot.TeleBot(config.TOKEN)
 GROUP = config.group
 SUPERUSER = config.superuser
