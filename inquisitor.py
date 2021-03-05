@@ -5,7 +5,7 @@ from time import time
 import json
 import re
 
-# ----------------------------- ver 1.0 ----------------------------------------------------
+
 bot = telebot.TeleBot(config.TOKEN)
 GROUP = config.group
 SUPERUSER = config.superuser
@@ -135,9 +135,7 @@ def read_rules(message):
         else:
             bot.delete_message(message.chat.id, message.message_id)
     else:
-        msg = f"{mention_user(message)}, радий що Ви спитали про правила\. [Осьо вони]({config.rules_url}), " \
-              f"тепер я слідкую щоб Ви не порушували\."
-        bot.send_message(message.chat.id, msg, reply_to_message_id=message.message_id, parse_mode='MarkdownV2')
+        bot.delete_message(message.chat.id, message.message_id)
 
 
 @bot.message_handler(commands=['use_search'])
