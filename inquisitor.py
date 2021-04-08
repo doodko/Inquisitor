@@ -25,6 +25,7 @@ def handler_new_member(message):
             date = int(message.date)
             data["quarantine"] = {key: value for key, value in data["quarantine"].items() if value > date}
             data["quarantine"][user_id] = date + data['quarantine_time']
+            data['preventions'] = [i for i in data['preventions'] if str(i) in data["quarantine"]]
             save_data()
 
 
@@ -35,12 +36,21 @@ def handler_new_member(message):
 def filer_new_members(message):
     if data['moderation']:
         check_horses(message)
-        if message.entities and (message.entities[0].type == 'url' or message.entities[0].type == 'mention'):
+        if message.entities and (message.entities[0].type == 'url'
+                                 or message.entities[0].type == 'mention'
+                                 or message.entities[0].type == 'text_link'):
             bot.delete_message(message.chat.id, message.message_id)
-            text = f'{mention_user(message)}, не встигли зайти в чат і одразу посилання вставляти\? ' \
-                   f'У нас так не прийнято, спочатку ознайомтесь з [правилами]({config.rules_url})\.'
-            bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
-            data['tips'] += 1
+            if message.from_user.id not in data['preventions']:
+                text = f'{mention_user(message)}, не встигли зайти в чат і одразу посилання вставляти\? ' \
+                    f'У нас так не прийнято, спочатку ознайомтесь з [правилами]({config.rules_url})\.'
+                bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
+                data['preventions'].append(message.from_user.id)
+                data['tips'] += 1
+            else:
+                bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time() + data["restrict_user"])
+                msg = f'{make_fullname(message)} was muted because of external link: {message.text}'
+                log_it(msg)
+                data['tips'] += 1
         else:
             all_text_messages(message)
 
