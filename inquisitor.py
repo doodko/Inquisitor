@@ -42,8 +42,8 @@ def filer_new_members(message):
                                  or message.entities[0].type == 'text_link'):
             if any([i in message.entities[0].url for i in ('bit.ly', 'cutt.ly', 'shorturl', 'tinyurl')]):
                 ban_user(message, 'spam')
-                text = f'{mention_user(message)}, у нас не люблять спам, прощавайте.'
-                bot.send_message(message.chat.id, text)
+                text = f'{mention_user(message)}, спам у нас не люблять, прощавайте.'
+                bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
             else:
                 bot.delete_message(message.chat.id, message.message_id)
                 if message.from_user.id not in data['preventions']:
