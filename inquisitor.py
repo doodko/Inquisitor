@@ -5,7 +5,6 @@ from time import time
 import json
 import re
 
-
 bot = telebot.TeleBot(config.TOKEN)
 GROUP = config.group
 SUPERUSER = config.superuser
@@ -31,8 +30,8 @@ def handler_new_member(message):
 
 # ----------------------------- FILTER FOR NEW MEMBERS --------------------------------------------
 @bot.message_handler(func=lambda message: message.text
-                     and message.chat.id == GROUP
-                     and data["quarantine"].get(str(message.from_user.id), 0) > time())
+                                          and message.chat.id == GROUP
+                                          and data["quarantine"].get(str(message.from_user.id), 0) > time())
 def filer_new_members(message):
     if data['moderation']:
         check_horses(message)
@@ -46,8 +45,8 @@ def filer_new_members(message):
 
 
 @bot.edited_message_handler(func=lambda message: message.text
-                            and message.chat.id == GROUP
-                            and data["quarantine"].get(str(message.from_user.id), 0) > time())
+                                                 and message.chat.id == GROUP
+                                                 and data["quarantine"].get(str(message.from_user.id), 0) > time())
 def edit_message(message):
     filer_new_members(message)
 
@@ -160,6 +159,13 @@ def load_data():
         return json.load(f)
 
 
+@bot.message_handler(commands=['update_data'])
+def data_update(message):
+    if message.from_user.username in config.admins:
+        global data
+        data = load_data()
+        bot.send_message(message.chat.id, 'Data has been updated')
+
 def log_it(msg):
     log = f"{date_and_time()} : {msg}\n"
     with open(config.log_file, 'a', encoding='utf-8') as f:
@@ -196,9 +202,13 @@ def check_links(message):
     if message.entities and (message.entities[0].type == 'url'
                              or message.entities[0].type == 'mention'
                              or message.entities[0].type == 'text_link'):
-        if message.entities[0].type == 'url' and \
-                any([i in message.entities[0].url for i in ('bit.ly', 'cutt.ly', 'shorturl', 'tinyurl')]) or \
-                any([j in message.text.lower() for j in ('musk', 'elon', 'crypto', 'tesla', 'bitcoin', 'give')]):
+
+        if message.entities[0].type == 'text_link' and \
+                any([i in message.entities[0].url for i in ('bit.ly', 'cutt.ly', 'shorturl', 'tinyurl')]):
+            ban_user(message, 'spam')
+            text = f'{mention_user(message)}, спам у нас не люблять, прощавайте\.'
+            bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
+        elif any([j in message.text.lower() for j in ('musk', 'elon', 'crypto', 'tesla', 'bitcoin', 'give')]):
             ban_user(message, 'spam')
             text = f'{mention_user(message)}, спам у нас не люблять, прощавайте\.'
             bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
