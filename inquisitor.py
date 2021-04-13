@@ -196,8 +196,9 @@ def check_links(message):
     if message.entities and (message.entities[0].type == 'url'
                              or message.entities[0].type == 'mention'
                              or message.entities[0].type == 'text_link'):
-        if any([i in message.entities[0].url for i in ('bit.ly', 'cutt.ly', 'shorturl', 'tinyurl')]) \
-                or any([j in message.text.lower() for j in ('musk', 'elon', 'crypto', 'tesla', 'bitcoin', 'give')]):
+        if message.entities[0].type == 'url' and \
+                any([i in message.entities[0].url for i in ('bit.ly', 'cutt.ly', 'shorturl', 'tinyurl')]) or \
+                any([j in message.text.lower() for j in ('musk', 'elon', 'crypto', 'tesla', 'bitcoin', 'give')]):
             ban_user(message, 'spam')
             text = f'{mention_user(message)}, спам у нас не люблять, прощавайте\.'
             bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
