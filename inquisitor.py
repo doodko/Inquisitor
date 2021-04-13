@@ -36,30 +36,8 @@ def handler_new_member(message):
 def filer_new_members(message):
     if data['moderation']:
         check_horses(message)
-        #check links
-        if message.entities and (message.entities[0].type == 'url'
-                                 or message.entities[0].type == 'mention'
-                                 or message.entities[0].type == 'text_link'):
-            if any([i in message.entities[0].url for i in ('bit.ly', 'cutt.ly', 'shorturl', 'tinyurl')]) \
-                    or any([j in message.text.lower() for j in ('musk', 'elon', 'crypto', 'tesla', 'bitcoin', 'give')]):
-                ban_user(message, 'spam')
-                text = f'{mention_user(message)}, спам у нас не люблять, прощавайте\.'
-                bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
-            else:
-                bot.delete_message(message.chat.id, message.message_id)
-                if message.from_user.id not in data['preventions']:
-                    text = f'{mention_user(message)}, не встигли зайти в чат і одразу посилання вставляти\? ' \
-                        f'У нас так не прийнято, спочатку ознайомтесь з [правилами]({config.rules_url})\.'
-                    bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
-                    data['preventions'].append(message.from_user.id)
-                    data['tips'] += 1
-                else:
-                    bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time() + data["restrict_user"])
-                    msg = f'{make_fullname(message)} was muted because of external link: {message.text}'
-                    log_it(msg)
-                    data['tips'] += 1
-        else:
-            all_text_messages(message)
+        check_links(message)
+        all_text_messages(message)
 
     else:
         msg = f'{make_fullname(message)} wrote to {message.chat.id} chat: ' \
@@ -212,6 +190,30 @@ def check_horses(message):
     elif any(map(lambda match: re.search(match, re.sub(r'[\W]', '', message.text.lower())), config.reglist)):
         reason = "horses regex from new user"
         ban_user(message, reason)
+
+
+def check_links(message):
+    if message.entities and (message.entities[0].type == 'url'
+                             or message.entities[0].type == 'mention'
+                             or message.entities[0].type == 'text_link'):
+        if any([i in message.entities[0].url for i in ('bit.ly', 'cutt.ly', 'shorturl', 'tinyurl')]) \
+                or any([j in message.text.lower() for j in ('musk', 'elon', 'crypto', 'tesla', 'bitcoin', 'give')]):
+            ban_user(message, 'spam')
+            text = f'{mention_user(message)}, спам у нас не люблять, прощавайте\.'
+            bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
+        else:
+            bot.delete_message(message.chat.id, message.message_id)
+            if message.from_user.id not in data['preventions']:
+                text = f'{mention_user(message)}, не встигли зайти в чат і одразу посилання вставляти\? ' \
+                       f'У нас так не прийнято, спочатку ознайомтесь з [правилами]({config.rules_url})\.'
+                bot.send_message(message.chat.id, text, parse_mode='MarkdownV2')
+                data['preventions'].append(message.from_user.id)
+                data['tips'] += 1
+            else:
+                bot.restrict_chat_member(GROUP, message.from_user.id, until_date=time() + data["restrict_user"])
+                msg = f'{make_fullname(message)} was muted because of external link: {message.text}'
+                log_it(msg)
+                data['tips'] += 1
 
 
 def ban_user(message, reason):
